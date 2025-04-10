@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PosAlert Demo</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="./posalert.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 18px;
+        }
+        
+        .demo-section {
+            margin-bottom: 40px;
+        }
+        
+        h2 {
+            color: var(--primary-color);
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-top: 30px;
+        }
+        
+        .button-group {
+            margin: 20px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            background-color: var(--secondary-color);
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            opacity: 0.9;
+        }
+        
+        .btn-primary { background-color: #2c3e50; }
+        .btn-secondary { background-color: #3498db; }
+        .btn-success { background-color: #2ecc71; }
+        .btn-danger { background-color: #e74c3c; }
+        .btn-warning { background-color: #f39c12; }
+        .btn-info { background-color: #1abc9c; }
+        
+        .options-form {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        .color-picker {
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .color-option {
+            width: calc(16.66% - 10px);
+            padding: 10px 0;
+            text-align: center;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+        }
+        
+        .toast-preview {
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 4px;
+            color: white;
+        }
+        
+        .code-block {
+            background-color: #f4f4f4;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        @media (max-width: 768px) {
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .color-option {
+                width: calc(33.33% - 10px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>PosAlert Demo</h1>
+            <p class="subtitle">A customizable alert system for POS applications</p>
+        </header>
+        
+        <div class="demo-section">
+            <h2>Basic Alerts</h2>
+            <div class="button-group">
+                <button class="btn-primary" id="basicAlert">Basic Alert</button>
+                <button class="btn-danger" id="dangerAlert">Danger Alert</button>
+                <button class="btn-success" id="successAlert">Success Alert</button>
+                <button class="btn-warning" id="warningAlert">Warning Alert</button>
+                <button class="btn-info" id="infoAlert">Info Alert</button>
+            </div>
+            
+            <div class="code-block">
+                $.posAlert().alert({
+                    title: 'Information',
+                    message: 'This is a basic alert message.',
+                    theme: 'primary'
+                });
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <h2>Confirmation Dialogs</h2>
+            <div class="button-group">
+                <button class="btn-primary" id="basicConfirm">Basic Confirm</button>
+                <button class="btn-danger" id="dangerConfirm">Delete Confirmation</button>
+                <button class="btn-warning" id="warningConfirm">Warning Confirmation</button>
+            </div>
+            
+            <div class="code-block">
+                $.posAlert().confirm({
+                    title: 'Confirm Action',
+                    message: 'Are you sure you want to proceed?',
+                    confirmText: 'Yes',
+                    cancelText: 'No',
+                    theme: 'primary',
+                    onConfirm: function() {
+                        console.log('Confirmed');
+                    },
+                    onCancel: function() {
+                        console.log('Cancelled');
+                    }
+                });
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <h2>Prompt Dialogs</h2>
+            <div class="button-group">
+                <button class="btn-primary" id="basicPrompt">Basic Prompt</button>
+                <button class="btn-secondary" id="quantityPrompt">Quantity Prompt</button>
+                <button class="btn-info" id="discountPrompt">Discount Prompt</button>
+            </div>
+            
+            <div class="code-block">
+                $.posAlert().prompt({
+                    title: 'Enter Information',
+                    message: 'Please provide the requested information:',
+                    placeholder: 'Type here...',
+                    theme: 'primary',
+                    onConfirm: function(value) {
+                        console.log('Value entered:', value);
+                    }
+                });
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <h2>Toast Notifications</h2>
+            <div class="button-group">
+                <button class="btn-success" id="successToast">Success Toast</button>
+                <button class="btn-danger" id="errorToast">Error Toast</button>
+                <button class="btn-warning" id="warningToast">Warning Toast</button>
+                <button class="btn-info" id="infoToast">Info Toast</button>
+            </div>
+            
+            <div class="options-form">
+                <div class="form-group">
+                    <label for="toastPosition">Toast Position:</label>
+                    <select id="toastPosition">
+                        <option value="top-right">Top Right</option>
+                        <option value="top-left">Top Left</option>
+                        <option value="bottom-right" selected>Bottom Right</option>
+                        <option value="bottom-left">Bottom Left</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="toastDuration">Toast Duration (ms):</label>
+                    <input type="number" id="toastDuration" value="3000" min="500" step="500">
+                </div>
+                
+                <button class="btn-secondary" id="updateToastSettings">Update Toast Settings</button>
+            </div>
+            
+            <div class="code-block">
+                $.posAlert().toast({
+                    message: 'This is a toast notification',
+                    type: 'success', // success, error, warning, info
+                    duration: 3000
+                });
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <h2>Theme Customization</h2>
+            
+            <div class="options-form">
+                <h3>Color Theme</h3>
+                <div class="color-picker">
+                    <div class="color-option" style="background-color: #2c3e50;" data-color="#2c3e50">Default</div>
+                    <div class="color-option" style="background-color: #3f51b5;" data-color="#3f51b5">Indigo</div>
+                    <div class="color-option" style="background-color: #673ab7;" data-color="#673ab7">Purple</div>
+                    <div class="color-option" style="background-color: #009688;" data-color="#009688">Teal</div>
+                    <div class="color-option" style="background-color: #4caf50;" data-color="#4caf50">Green</div>
+                    <div class="color-option" style="background-color: #ff5722;" data-color="#ff5722">Orange</div>
+                </div>
+                
+                <div class="form-group" style="margin-top: 20px;">
+                    <label for="borderRadius">Border Radius:</label>
+                    <input type="range" id="borderRadius" min="0" max="20" value="8" oninput="this.nextElementSibling.value = this.value + 'px'">
+                    <output>8px</output>
+                </div>
+                
+                <button class="btn-primary" id="updateTheme">Apply Theme</button>
+            </div>
+            
+            <div class="code-block">
+                $.posAlert().updateTheme({
+                    primaryColor: '#3f51b5',
+                    secondaryColor: '#2196f3',
+                    borderRadius: '8px'
+                });
+            </div>
+        </div>
+        
+        <footer>
+            &copy; 2025 PosAlert jQuery Plugin - Created by Razamoh
+        </footer>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Initialize PosAlert
+            $.posAlert();
+            
+            // Basic Alerts
+            $('#basicAlert').on('click', function() {
+                $.posAlert().alert({
+                    title: 'Information',
+                    message: 'This is a basic alert message.',
+                    theme: 'primary'
+                });
+            });
+            
+            $('#dangerAlert').on('click', function() {
+                $.posAlert().alert({
+                    title: 'Error',
+                    message: 'Something went wrong. Please try again.',
+                    buttonText: 'Close',
+                    theme: 'danger'
+                });
+            });
+            
+            $('#successAlert').on('click', function() {
+                $.posAlert().alert({
+                    title: 'Success',
+                    message: 'Transaction completed successfully!',
+                    buttonText: 'Great',
+                    theme: 'success'
+                });
+            });
+            
+            $('#warningAlert').on('click', function() {
+                $.posAlert().alert({
+                    title: 'Warning',
+                    message: 'This action will apply a 15% discount to all items.',
+                    buttonText: 'I Understand',
+                    theme: 'warning'
+                });
+            });
+            
+            $('#infoAlert').on('click', function() {
+                $.posAlert().alert({
+                    title: 'Information',
+                    message: 'The store will close in 15 minutes.',
+                    buttonText: 'Got It',
+                    theme: 'info'
+                });
+            });
+            
+            // Confirmation Dialogs
+            $('#basicConfirm').on('click', function() {
+                $.posAlert().confirm({
+                    title: 'Confirm Action',
+                    message: 'Are you sure you want to proceed with this transaction?',
+                    theme: 'primary',
+                    onConfirm: function() {
+                        $.posAlert().toast({
+                            message: 'Action confirmed!',
+                            type: 'success'
+                        });
+                    },
+                    onCancel: function() {
+                        $.posAlert().toast({
+                            message: 'Action cancelled',
+                            type: 'info'
+                        });
+                    }
+                });
+            });
+            
+            $('#dangerConfirm').on('click', function() {
+                $.posAlert().confirm({
+                    title: 'Delete Transaction',
+                    message: 'Are you sure you want to void this transaction? This action cannot be undone.',
+                    confirmText: 'Yes, Delete It',
+                    cancelText: 'Cancel',
+                    theme: 'danger',
+                    onConfirm: function() {
+                        $.posAlert().toast({
+                            message: 'Transaction deleted',
+                            type: 'success'
+                        });
+                    }
+                });
+            });
+            
+            $('#warningConfirm').on('click', function() {
+                $.posAlert().confirm({
+                    title: 'Apply Discount',
+                    message: 'This will apply a 20% discount to the entire order. Continue?',
+                    confirmText: 'Apply Discount',
+                    theme: 'warning',
+                    onConfirm: function() {
+                        $.posAlert().toast({
+                            message: 'Discount applied',
+                            type: 'success'
+                        });
+                    }
+                });
+            });
+            
+            // Prompt Dialogs
+            $('#basicPrompt').on('click', function() {
+                $.posAlert().prompt({
+                    title: 'Customer Note',
+                    message: 'Add a note to this transaction:',
+                    placeholder: 'Type note here...',
+                    theme: 'primary',
+                    onConfirm: function(value) {
+                        if (value) {
+                            $.posAlert().toast({
+                                message: 'Note added: ' + value,
+                                type: 'success'
+                            });
+                        }
+                    }
+                });
+            });
+            
+            $('#quantityPrompt').on('click', function() {
+                $.posAlert().prompt({
+                    title: 'Change Quantity',
+                    message: 'Enter new quantity:',
+                    defaultValue: '1',
+                    theme: 'secondary',
+                    onConfirm: function(value) {
+                        if (value && !isNaN(value)) {
+                            $.posAlert().toast({
+                                message: 'Quantity updated to: ' + value,
+                                type: 'success'
+                            });
+                        } else {
+                            $.posAlert().toast({
+                                message: 'Please enter a valid number',
+                                type: 'error'
+                            });
+                        }
+                    }
+                });
+            });
+            
+            $('#discountPrompt').on('click', function() {
+                $.posAlert().prompt({
+                    title: 'Apply Discount',
+                    message: 'Enter discount percentage:',
+                    placeholder: '0-100',
+                    theme: 'info',
+                    onConfirm: function(value) {
+                        if (value && !isNaN(value) && value >= 0 && value <= 100) {
+                            $.posAlert().toast({
+                                message: value + '% discount applied',
+                                type: 'success'
+                            });
+                        } else {
+                            $.posAlert().toast({
+                                message: 'Please enter a valid percentage (0-100)',
+                                type: 'error'
+                            });
+                        }
+                    }
+                });
+            });
+            
+            // Toast Notifications
+            $('#successToast').on('click', function() {
+                $.posAlert().toast({
+                    message: 'Item added to cart successfully!',
+                    type: 'success',
+                    duration: parseInt($('#toastDuration').val())
+                });
+            });
+            
+            $('#errorToast').on('click', function() {
+                $.posAlert().toast({
+                    message: 'Error: Could not process payment.',
+                    type: 'error',
+                    duration: parseInt($('#toastDuration').val())
+                });
+            });
+            
+            $('#warningToast').on('click', function() {
+                $.posAlert().toast({
+                    message: 'Warning: Printer paper is low.',
+                    type: 'warning',
+                    duration: parseInt($('#toastDuration').val())
+                });
+            });
+            
+            $('#infoToast').on('click', function() {
+                $.posAlert().toast({
+                    message: 'Information: New software update available.',
+                    type: 'info',
+                    duration: parseInt($('#toastDuration').val())
+                });
+            });
+            
+            // Update Toast Settings
+            $('#updateToastSettings').on('click', function() {
+                const position = $('#toastPosition').val();
+                const duration = parseInt($('#toastDuration').val());
+                
+                $.posAlert().setToastPosition(position);
+                $.posAlert().setToastTimeout(duration);
+                
+                $.posAlert().toast({
+                    message: 'Toast settings updated!',
+                    type: 'info'
+                });
+            });
+            
+            // Theme Customization
+            $('.color-option').on('click', function() {
+                $('.color-option').css('border', 'none');
+                $(this).css('border', '2px solid #fff');
+            });
+            
+            $('#updateTheme').on('click', function() {
+                const selectedColor = $('.color-option').filter(function() {
+                    return $(this).css('border-width') === '2px';
+                }).data('color') || '#2c3e50';
+                
+                const borderRadius = $('#borderRadius').val() + 'px';
+                
+                $.posAlert().updateTheme({
+                    primaryColor: selectedColor,
+                    secondaryColor: adjustColor(selectedColor, 30),
+                    borderRadius: borderRadius
+                });
+                
+                $.posAlert().toast({
+                    message: 'Theme updated successfully!',
+                    type: 'success'
+                });
+            });
+            
+            // Helper function to adjust color brightness
+            function adjustColor(hex, percent) {
+                // Convert hex to RGB
+                let r = parseInt(hex.slice(1, 3), 16);
+                let g = parseInt(hex.slice(3, 5), 16);
+                let b = parseInt(hex.slice(5, 7), 16);
+                
+                // Make lighter
+                r = Math.min(255, r + percent);
+                g = Math.min(255, g + percent);
+                b = Math.min(255, b + percent);
+                
+                // Convert back to hex
+                return '#' + 
+                    r.toString(16).padStart(2, '0') +
+                    g.toString(16).padStart(2, '0') +
+                    b.toString(16).padStart(2, '0');
+            }
+        });
+    </script>
+</body>
+</html>
