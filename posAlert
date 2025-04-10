@@ -1,0 +1,645 @@
+/**
+ * PosAlert - A customizable alert system for POS applications
+ * jQuery Plugin version
+ * 
+ * @author Razamoh
+ * @version 1.0.0
+ */
+
+(function($) {
+    'use strict';
+
+    // Plugin defaults
+    const defaults = {
+        theme: {
+            primaryColor: '#2c3e50',
+            secondaryColor: '#3498db',
+            dangerColor: '#e74c3c',
+            successColor: '#2ecc71',
+            warningColor: '#f39c12',
+            infoColor: '#1abc9c',
+            textColor: '#333',
+            backgroundColor: '#fff',
+            backdropColor: 'rgba(0, 0, 0, 0.5)',
+            borderRadius: '8px',
+            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+            fontFamily: 'Arial, sans-serif'
+        },
+        toastTimeout: 3000,
+        toastPosition: 'bottom-right', // 'top-right', 'top-left', 'bottom-left', 'bottom-right'
+        zIndex: 10000
+    };
+
+    // The actual plugin constructor
+    function PosAlert(element, options) {
+        this.element = element;
+        this.settings = $.extend(true, {}, defaults, options);
+        this.init();
+    }
+
+    // Plugin methods
+    $.extend(PosAlert.prototype, {
+        init: function() {
+            // Create necessary DOM elements if they don't exist
+            this.createBaseElements();
+            
+            // Apply theme
+            this.applyTheme(this.settings.theme);
+            
+            // Add event listeners for ESC key
+            $(document).on('keydown.posAlert', (e) => {
+                if (e.key === 'Escape' && this.activeAlert) {
+                    this.close();
+                }
+            });
+        },
+
+        createBaseElements: function() {
+            // Remove any existing elements
+            $('.pos-alert-backdrop, .pos-toast-container').remove();
+            
+            // Create backdrop and containers
+            $('body').append(`
+                <div class="pos-alert-backdrop">
+                    <div class="pos-alert-container"></div>
+                </div>
+                <div class="pos-toast-container"></div>
+            `);
+
+            // Add base CSS
+            if (!$('#posAlertStyles').length) {
+                $('head').append(`
+                    <style id="posAlertStyles">
+                        .pos-alert-backdrop {
+                            position: fixed;
+                            top: 0;
+                            left: 0;
+                            width: 100%;
+                            height: 100%;
+                            background-color: var(--pos-backdrop-color);
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            z-index: var(--pos-z-index);
+                            opacity: 0;
+                            visibility: hidden;
+                            transition: opacity 0.3s, visibility 0.3s;
+                        }
+                        
+                        .pos-alert-backdrop.active {
+                            opacity: 1;
+                            visibility: visible;
+                        }
+                        
+                        .pos-alert-container {
+                            width: 90%;
+                            max-width: 400px;
+                            background-color: var(--pos-background-color);
+                            border-radius: var(--pos-border-radius);
+                            box-shadow: var(--pos-box-shadow);
+                            overflow: hidden;
+                            animation: pos-slide-in 0.3s forwards;
+                        }
+                        
+                        @keyframes pos-slide-in {
+                            from {
+                                transform: translateY(-20px);
+                                opacity: 0;
+                            }
+                            to {
+                                transform: translateY(0);
+                                opacity: 1;
+                            }
+                        }
+                        
+                        .pos-alert-header {
+                            padding: 15px;
+                            color: white;
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                        }
+                        
+                        .pos-alert-title {
+                            font-size: 18px;
+                            font-weight: bold;
+                        }
+                        
+                        .pos-alert-close {
+                            background: none;
+                            border: none;
+                            color: white;
+                            font-size: 20px;
+                            cursor: pointer;
+                        }
+                        
+                        .pos-alert-body {
+                            padding: 20px;
+                            color: var(--pos-text-color);
+                            font-size: 16px;
+                        }
+                        
+                        .pos-alert-input {
+                            width: 100%;
+                            padding: 10px;
+                            margin-top: 10px;
+                            border: 1px solid #ddd;
+                            border-radius: 4px;
+                            font-size: 16px;
+                        }
+                        
+                        .pos-alert-footer {
+                            padding: 15px;
+                            display: flex;
+                            justify-content: flex-end;
+                            gap: 10px;
+                            border-top: 1px solid #eee;
+                        }
+                        
+                        .pos-alert-btn {
+                            padding: 8px 15px;
+                            border: none;
+                            border-radius: 4px;
+                            cursor: pointer;
+                            font-weight: bold;
+                            transition: all 0.2s;
+                        }
+                        
+                        .pos-alert-btn-cancel {
+                            background-color: #e0e0e0;
+                            color: #333;
+                        }
+                        
+                        .pos-alert-btn-confirm {
+                            background-color: var(--pos-secondary-color);
+                            color: white;
+                        }
+                        
+                        .pos-alert-btn-success {
+                            background-color: var(--pos-success-color);
+                            color: white;
+                        }
+                        
+                        .pos-alert-btn-danger {
+                            background-color: var(--pos-danger-color);
+                            color: white;
+                        }
+                        
+                        .pos-alert-btn-warning {
+                            background-color: var(--pos-warning-color);
+                            color: white;
+                        }
+                        
+                        .pos-alert-btn:hover {
+                            opacity: 0.9;
+                        }
+                        
+                        /* Toast Notification */
+                        .pos-toast-container {
+                            position: fixed;
+                            z-index: calc(var(--pos-z-index) + 1);
+                            display: flex;
+                            flex-direction: column;
+                            gap: 10px;
+                        }
+                        
+                        .pos-toast-container.bottom-right {
+                            bottom: 20px;
+                            right: 20px;
+                        }
+                        
+                        .pos-toast-container.bottom-left {
+                            bottom: 20px;
+                            left: 20px;
+                        }
+                        
+                        .pos-toast-container.top-right {
+                            top: 20px;
+                            right: 20px;
+                        }
+                        
+                        .pos-toast-container.top-left {
+                            top: 20px;
+                            left: 20px;
+                        }
+                        
+                        .pos-toast {
+                            min-width: 250px;
+                            padding: 15px;
+                            border-radius: var(--pos-border-radius);
+                            box-shadow: var(--pos-box-shadow);
+                            display: flex;
+                            align-items: center;
+                            justify-content: space-between;
+                            animation: pos-toast-in 0.3s forwards;
+                            color: white;
+                        }
+                        
+                        @keyframes pos-toast-in {
+                            from {
+                                transform: translateX(100%);
+                                opacity: 0;
+                            }
+                            to {
+                                transform: translateX(0);
+                                opacity: 1;
+                            }
+                        }
+                        
+                        @keyframes pos-toast-out {
+                            from {
+                                transform: translateX(0);
+                                opacity: 1;
+                            }
+                            to {
+                                transform: translateX(100%);
+                                opacity: 0;
+                            }
+                        }
+                        
+                        .pos-toast-container.top-left .pos-toast,
+                        .pos-toast-container.bottom-left .pos-toast {
+                            animation: pos-toast-in-left 0.3s forwards;
+                        }
+                        
+                        @keyframes pos-toast-in-left {
+                            from {
+                                transform: translateX(-100%);
+                                opacity: 0;
+                            }
+                            to {
+                                transform: translateX(0);
+                                opacity: 1;
+                            }
+                        }
+                        
+                        .pos-toast-container.top-left .pos-toast.removing,
+                        .pos-toast-container.bottom-left .pos-toast.removing {
+                            animation: pos-toast-out-left 0.3s forwards;
+                        }
+                        
+                        @keyframes pos-toast-out-left {
+                            from {
+                                transform: translateX(0);
+                                opacity: 1;
+                            }
+                            to {
+                                transform: translateX(-100%);
+                                opacity: 0;
+                            }
+                        }
+                        
+                        .pos-toast-success {
+                            background-color: var(--pos-success-color);
+                        }
+                        
+                        .pos-toast-error {
+                            background-color: var(--pos-danger-color);
+                        }
+                        
+                        .pos-toast-warning {
+                            background-color: var(--pos-warning-color);
+                        }
+                        
+                        .pos-toast-info {
+                            background-color: var(--pos-info-color);
+                        }
+                        
+                        .pos-toast-close {
+                            background: none;
+                            border: none;
+                            color: white;
+                            cursor: pointer;
+                            font-size: 18px;
+                            margin-left: 10px;
+                        }
+                        
+                        /* Responsive */
+                        @media (max-width: 600px) {
+                            .pos-alert-container {
+                                width: 95%;
+                            }
+                        
+                            .pos-toast-container {
+                                width: 90%;
+                                left: 50%;
+                                transform: translateX(-50%);
+                                bottom: 10px;
+                            }
+                        
+                            .pos-toast {
+                                width: 100%;
+                                min-width: auto;
+                            }
+                        }
+                    </style>
+                `);
+            }
+        },
+
+        applyTheme: function(theme) {
+            // Apply theme using CSS variables
+            const cssVars = `
+                :root {
+                    --pos-primary-color: ${theme.primaryColor};
+                    --pos-secondary-color: ${theme.secondaryColor};
+                    --pos-danger-color: ${theme.dangerColor};
+                    --pos-success-color: ${theme.successColor};
+                    --pos-warning-color: ${theme.warningColor};
+                    --pos-info-color: ${theme.infoColor};
+                    --pos-text-color: ${theme.textColor};
+                    --pos-background-color: ${theme.backgroundColor};
+                    --pos-backdrop-color: ${theme.backdropColor};
+                    --pos-border-radius: ${theme.borderRadius};
+                    --pos-box-shadow: ${theme.boxShadow};
+                    --pos-font-family: ${theme.fontFamily};
+                    --pos-z-index: ${this.settings.zIndex};
+                }
+            `;
+            
+            // Update or create theme style element
+            if ($('#posAlertTheme').length) {
+                $('#posAlertTheme').html(cssVars);
+            } else {
+                $('head').append(`<style id="posAlertTheme">${cssVars}</style>`);
+            }
+            
+            // Update toast position
+            $('.pos-toast-container')
+                .removeClass('top-right top-left bottom-right bottom-left')
+                .addClass(this.settings.toastPosition);
+        },
+
+        // Alert dialog
+        alert: function(options) {
+            const defaults = {
+                title: 'Alert',
+                message: 'This is an alert message.',
+                buttonText: 'OK',
+                buttonClass: 'pos-alert-btn-confirm',
+                theme: 'primary',
+                callback: null
+            };
+
+            const settings = $.extend({}, defaults, options);
+            this.activeAlert = 'alert';
+
+            const html = `
+                <div class="pos-alert-header" style="background-color: var(--pos-${settings.theme}-color);">
+                    <div class="pos-alert-title">${settings.title}</div>
+                    <button class="pos-alert-close">&times;</button>
+                </div>
+                <div class="pos-alert-body">${settings.message}</div>
+                <div class="pos-alert-footer">
+                    <button class="pos-alert-btn ${settings.buttonClass}" id="posAlertOkBtn">${settings.buttonText}</button>
+                </div>
+            `;
+
+            $('.pos-alert-container').html(html);
+            $('.pos-alert-backdrop').addClass('active');
+
+            // Event listeners
+            $('#posAlertOkBtn').on('click', () => {
+                this.close();
+                if (typeof settings.callback === 'function') {
+                    settings.callback();
+                }
+            });
+
+            $('.pos-alert-close').on('click', () => {
+                this.close();
+            });
+        },
+
+        // Confirm dialog
+        confirm: function(options) {
+            const defaults = {
+                title: 'Confirm',
+                message: 'Are you sure you want to proceed?',
+                confirmText: 'Yes',
+                cancelText: 'No',
+                confirmClass: 'pos-alert-btn-confirm',
+                cancelClass: 'pos-alert-btn-cancel',
+                theme: 'primary',
+                onConfirm: null,
+                onCancel: null
+            };
+
+            const settings = $.extend({}, defaults, options);
+            this.activeAlert = 'confirm';
+
+            const html = `
+                <div class="pos-alert-header" style="background-color: var(--pos-${settings.theme}-color);">
+                    <div class="pos-alert-title">${settings.title}</div>
+                    <button class="pos-alert-close">&times;</button>
+                </div>
+                <div class="pos-alert-body">${settings.message}</div>
+                <div class="pos-alert-footer">
+                    <button class="pos-alert-btn ${settings.cancelClass}" id="posAlertCancelBtn">${settings.cancelText}</button>
+                    <button class="pos-alert-btn ${settings.confirmClass}" id="posAlertConfirmBtn">${settings.confirmText}</button>
+                </div>
+            `;
+
+            $('.pos-alert-container').html(html);
+            $('.pos-alert-backdrop').addClass('active');
+
+            // Event listeners
+            $('#posAlertConfirmBtn').on('click', () => {
+                this.close();
+                if (typeof settings.onConfirm === 'function') {
+                    settings.onConfirm();
+                }
+            });
+
+            $('#posAlertCancelBtn').on('click', () => {
+                this.close();
+                if (typeof settings.onCancel === 'function') {
+                    settings.onCancel();
+                }
+            });
+
+            $('.pos-alert-close').on('click', () => {
+                this.close();
+                if (typeof settings.onCancel === 'function') {
+                    settings.onCancel();
+                }
+            });
+        },
+
+        // Prompt dialog
+        prompt: function(options) {
+            const defaults = {
+                title: 'Prompt',
+                message: 'Please enter a value:',
+                placeholder: '',
+                defaultValue: '',
+                confirmText: 'Submit',
+                cancelText: 'Cancel',
+                confirmClass: 'pos-alert-btn-confirm',
+                cancelClass: 'pos-alert-btn-cancel',
+                theme: 'primary',
+                onConfirm: null,
+                onCancel: null
+            };
+
+            const settings = $.extend({}, defaults, options);
+            this.activeAlert = 'prompt';
+
+            const html = `
+                <div class="pos-alert-header" style="background-color: var(--pos-${settings.theme}-color);">
+                    <div class="pos-alert-title">${settings.title}</div>
+                    <button class="pos-alert-close">&times;</button>
+                </div>
+                <div class="pos-alert-body">
+                    <p>${settings.message}</p>
+                    <input type="text" class="pos-alert-input" id="posAlertInput" 
+                           placeholder="${settings.placeholder}" value="${settings.defaultValue}">
+                </div>
+                <div class="pos-alert-footer">
+                    <button class="pos-alert-btn ${settings.cancelClass}" id="posAlertCancelBtn">${settings.cancelText}</button>
+                    <button class="pos-alert-btn ${settings.confirmClass}" id="posAlertConfirmBtn">${settings.confirmText}</button>
+                </div>
+            `;
+
+            $('.pos-alert-container').html(html);
+            $('.pos-alert-backdrop').addClass('active');
+
+            // Focus on input
+            setTimeout(() => {
+                $('#posAlertInput').focus();
+            }, 100);
+
+            // Event listeners
+            $('#posAlertConfirmBtn').on('click', () => {
+                const value = $('#posAlertInput').val();
+                this.close();
+                if (typeof settings.onConfirm === 'function') {
+                    settings.onConfirm(value);
+                }
+            });
+
+            $('#posAlertCancelBtn').on('click', () => {
+                this.close();
+                if (typeof settings.onCancel === 'function') {
+                    settings.onCancel();
+                }
+            });
+
+            $('.pos-alert-close').on('click', () => {
+                this.close();
+                if (typeof settings.onCancel === 'function') {
+                    settings.onCancel();
+                }
+            });
+
+            // Submit on Enter key
+            $('#posAlertInput').on('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const value = $('#posAlertInput').val();
+                    this.close();
+                    if (typeof settings.onConfirm === 'function') {
+                        settings.onConfirm(value);
+                    }
+                }
+            });
+        },
+
+        // Toast notifications
+        toast: function(options) {
+            const defaults = {
+                message: 'This is a toast notification',
+                type: 'info', // success, error, warning, info
+                duration: this.settings.toastTimeout,
+                dismissible: true
+            };
+
+            const settings = $.extend({}, defaults, options);
+            
+            const $toast = $(`
+                <div class="pos-toast pos-toast-${settings.type}">
+                    <div class="pos-toast-content">${settings.message}</div>
+                    ${settings.dismissible ? '<button class="pos-toast-close">&times;</button>' : ''}
+                </div>
+            `);
+            
+            $('.pos-toast-container').append($toast);
+            
+            if (settings.dismissible) {
+                $toast.find('.pos-toast-close').on('click', () => {
+                    this.removeToast($toast);
+                });
+            }
+            
+            // Auto dismiss
+            if (settings.duration > 0) {
+                setTimeout(() => {
+                    this.removeToast($toast);
+                }, settings.duration);
+            }
+            
+            return $toast;
+        },
+        
+        // Remove a toast
+        removeToast: function($toast) {
+            const position = this.settings.toastPosition;
+            
+            if (position.includes('left')) {
+                $toast.addClass('removing');
+            } else {
+                $toast.css('animation', 'pos-toast-out 0.3s forwards');
+            }
+            
+            setTimeout(() => {
+                $toast.remove();
+            }, 300);
+        },
+
+        // Close alert dialog
+        close: function() {
+            $('.pos-alert-backdrop').removeClass('active');
+            this.activeAlert = null;
+        },
+
+        // Update theme at runtime
+        updateTheme: function(themeOptions) {
+            this.settings.theme = $.extend({}, this.settings.theme, themeOptions);
+            this.applyTheme(this.settings.theme);
+        },
+
+        // Update toast position
+        setToastPosition: function(position) {
+            if (['top-right', 'top-left', 'bottom-right', 'bottom-left'].includes(position)) {
+                this.settings.toastPosition = position;
+                $('.pos-toast-container')
+                    .removeClass('top-right top-left bottom-right bottom-left')
+                    .addClass(position);
+            }
+        },
+
+        // Update toast timeout
+        setToastTimeout: function(timeout) {
+            this.settings.toastTimeout = timeout;
+        },
+        
+        // Destroy the plugin
+        destroy: function() {
+            $('.pos-alert-backdrop, .pos-toast-container').remove();
+            $(document).off('keydown.posAlert');
+        }
+    });
+
+    // A lightweight plugin wrapper around the constructor, preventing against multiple instantiations
+    $.fn.posAlert = function(options) {
+        if (!$.data(window, 'posAlert')) {
+            $.data(window, 'posAlert', new PosAlert(this, options));
+        }
+        return $.data(window, 'posAlert');
+    };
+
+    // Default "instance" - can be used without explicitly creating an instance
+    $.posAlert = function(options) {
+        return $(window).posAlert(options);
+    };
+
+})(jQuery);
